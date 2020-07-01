@@ -201,6 +201,11 @@
 {
     NSError *serializationError = nil;
     NSMutableURLRequest *request = [self.requestSerializer multipartFormRequestWithMethod:@"POST" URLString:[[NSURL URLWithString:URLString relativeToURL:self.baseURL] absoluteString] parameters:parameters constructingBodyWithBlock:block error:&serializationError];
+    //把cookie赋值
+    
+    id mtcook=[[NSUserDefaults standardUserDefaults]objectForKey:@"Set-Cookie"];
+    
+    [request setValue:mtcook forHTTPHeaderField:@"Cookie"];
     if (serializationError) {
         if (failure) {
             dispatch_async(self.completionQueue ?: dispatch_get_main_queue(), ^{
@@ -251,12 +256,61 @@
 
     return dataTask;
 }
++(AFHTTPSessionManager *)afManager:(NSString *)version{
+    AFHTTPSessionManager *manager=[AFHTTPSessionManager   manager];
+    //无条件的信任服务器上的证书
+    AFSecurityPolicy *securityPolicy = [AFSecurityPolicy defaultPolicy];
+    // 客户端是否信任非法证书
+    securityPolicy.allowInvalidCertificates = YES;
+    // 是否在证书域字段中验证域名
+    securityPolicy.validatesDomainName = NO;
+    manager.securityPolicy = securityPolicy;
+    //申明请求的数据是json类型
+    manager.requestSerializer=[AFJSONRequestSerializer serializer];
+    //申明返回的结果是json类型
+    manager.responseSerializer = [AFJSONResponseSerializer serializer];
 
+    //如果报接受类型不一致请替换一致text/html或别的
+    manager.requestSerializer= [AFHTTPRequestSerializer serializer];
+    manager.requestSerializer.HTTPShouldHandleCookies = YES;
+    
+    
+    NSString * cookieS =[[NSUserDefaults standardUserDefaults] objectForKey:@"Set-Cookie"];
+    NSString * cookieString = [NSString stringWithFormat:@"%@",cookieS];
+   
+    [manager.requestSerializer setValue:cookieString forHTTPHeaderField:@"Set-Cookie"];
+    
+    // 如果已有Cookie, 则把你的cookie符上
+//    NSString *cookie = [[NSUserDefaults standardUserDefaults] objectForKey:@"Set-Cookie"];
+//    if (cookie != nil) {
+//        [manager.requestSerializer setValue:cookie forHTTPHeaderField:@"Set-Cookie"];
+//    }
+    
+    manager.responseSerializer= [AFHTTPResponseSerializer serializer];
+//    //设置请求头
+   
+//
+    AFJSONResponseSerializer *serializer = [AFJSONResponseSerializer serializer];
+//    [serializer setRemovesKeysWithNullValues:YES];
+    [manager setResponseSerializer:serializer];
+    
+    if ([version intValue] == 10) {
+        manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"text/plain",@"text/html",nil];
+    }else{
+        manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects: @"application/json", @"text/html", @"image/jpeg", @"image/png", @"application/octet-stream", @"text/json",@"text/plain", nil];
+    }
+    return manager;
+}
 - (NSURLSessionDataTask *)DELETE:(NSString *)URLString
                       parameters:(id)parameters
                          success:(void (^)(NSURLSessionDataTask *task, id responseObject))success
                          failure:(void (^)(NSURLSessionDataTask *task, NSError *error))failure
 {
+    
+    
+//    self.manager=[AFHTTPSessionManager afManager:@""];
+    
+    
     NSURLSessionDataTask *dataTask = [self dataTaskWithHTTPMethod:@"DELETE" URLString:URLString parameters:parameters uploadProgress:nil downloadProgress:nil success:success failure:failure];
 
     [dataTask resume];
@@ -274,6 +328,15 @@
 {
     NSError *serializationError = nil;
     NSMutableURLRequest *request = [self.requestSerializer requestWithMethod:method URLString:[[NSURL URLWithString:URLString relativeToURL:self.baseURL] absoluteString] parameters:parameters error:&serializationError];
+    
+    
+    //把cookie赋值
+    
+    id mtcook=[[NSUserDefaults standardUserDefaults]objectForKey:@"Set-Cookie"];
+    
+    [request setValue:mtcook forHTTPHeaderField:@"Cookie"];
+    
+    
     if (serializationError) {
         if (failure) {
             dispatch_async(self.completionQueue ?: dispatch_get_main_queue(), ^{

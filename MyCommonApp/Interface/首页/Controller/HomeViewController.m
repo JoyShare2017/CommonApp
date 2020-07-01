@@ -17,6 +17,14 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
+    
+    NSMutableDictionary*mdic=[@{
+                                       @"NICKNAME":@"欧巴",
+                                    
+                                       }mutableCopy];
+    [CommonRequest commonRequestWithServerName:@"http://220.115.18.18:8001/fh-system/user/editUserOwn" andParams:mdic andComplete:^(NetworkResult resultCode, id obj) {
+        
+    }];
 }
 
 

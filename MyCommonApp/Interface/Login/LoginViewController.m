@@ -83,10 +83,10 @@
         [self showHudInView:self.view];
         
         NSMutableDictionary*mdic=[@{
-                                    @"user_name":weakSelf.accountTF.text,
-                                    @"user_pass":weakSelf.pwdTF.text
+                                    @"KEYDATA":@"qq361156753fh13193337134,fh,123456",
+                                    @"tm":@"1582513081000"
                                     }mutableCopy];
-        [CommonRequest commonRequestWithServerName:@"member/index/login" andParams:mdic andComplete:^(NetworkResult resultCode, id obj) {
+        [CommonRequest commonRequestWithServerName:@"http://220.115.18.18:8001/fh-system/admin/check" andParams:mdic andComplete:^(NetworkResult resultCode, id obj) {
             [weakSelf hideHud];
 //            if (resultCode==NetworkResultSuceess) {
             

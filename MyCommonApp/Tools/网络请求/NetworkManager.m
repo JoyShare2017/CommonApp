@@ -115,7 +115,52 @@
     }
     return self;
 }
+/** 封装初始化一下AFHTTPSessionManager */
++(AFHTTPSessionManager *)afManager:(NSString *)version{
+    AFHTTPSessionManager *manager=[AFHTTPSessionManager   manager];
+    //无条件的信任服务器上的证书
+    AFSecurityPolicy *securityPolicy = [AFSecurityPolicy defaultPolicy];
+    // 客户端是否信任非法证书
+    securityPolicy.allowInvalidCertificates = YES;
+    // 是否在证书域字段中验证域名
+    securityPolicy.validatesDomainName = NO;
+    manager.securityPolicy = securityPolicy;
+    //申明请求的数据是json类型
+    manager.requestSerializer=[AFJSONRequestSerializer serializer];
+    //申明返回的结果是json类型
+    manager.responseSerializer = [AFJSONResponseSerializer serializer];
 
+    //如果报接受类型不一致请替换一致text/html或别的
+    manager.requestSerializer= [AFHTTPRequestSerializer serializer];
+    manager.requestSerializer.HTTPShouldHandleCookies = YES;
+    
+    
+    NSString * cookieS =[[NSUserDefaults standardUserDefaults] objectForKey:@"Set-Cookie"];
+    NSString * cookieString = [NSString stringWithFormat:@"%@",cookieS];
+   
+    [manager.requestSerializer setValue:cookieString forHTTPHeaderField:@"Set-Cookie"];
+    
+    // 如果已有Cookie, 则把你的cookie符上
+//    NSString *cookie = [[NSUserDefaults standardUserDefaults] objectForKey:@"Set-Cookie"];
+//    if (cookie != nil) {
+//        [manager.requestSerializer setValue:cookie forHTTPHeaderField:@"Set-Cookie"];
+//    }
+    
+    manager.responseSerializer= [AFHTTPResponseSerializer serializer];
+//    //设置请求头
+    
+//
+    AFJSONResponseSerializer *serializer = [AFJSONResponseSerializer serializer];
+//    [serializer setRemovesKeysWithNullValues:YES];
+    [manager setResponseSerializer:serializer];
+    
+    if ([version intValue] == 10) {
+        manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"text/plain",@"text/html",nil];
+    }else{
+        manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects: @"application/json", @"text/html", @"image/jpeg", @"image/png", @"application/octet-stream", @"text/json",@"text/plain", nil];
+    }
+    return manager;
+}
 
 - (void)request:(HTTPMethod)method
       URLString:(NSString *)URLString
@@ -129,7 +174,29 @@
     // dataTaskWithHTTPMethod本类没有实现方法，但是父类实现了
     // 在调用方法的时候，如果本类没有提供，直接调用父类的方法，AFN 内部已经实现！
     //!！！如果AFN库这个方法更新了，这里要换
+    
+      
+    
     [[self dataTaskWithHTTPMethod:methodName URLString:URLString parameters:parameters uploadProgress:nil downloadProgress:nil success:^(NSURLSessionDataTask *task, id responseObject) {
+        
+        NSArray *cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL: [NSURL URLWithString:URLString]];
+            
+            
+            
+            
+            
+            NSHTTPURLResponse* response = (NSHTTPURLResponse*)task.response;
+            NSLog(@"cookie==%@",cookies);
+        NSLog(@"======currentRequest:%@========task.response:%@",task.currentRequest.allHTTPHeaderFields,response.allHeaderFields[@"Set-Cookie"]);
+            
+            [[NSUserDefaults standardUserDefaults] setObject:response.allHeaderFields[@"Set-Cookie"] forKey:@"Set-Cookie"];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+        
+        
+        
+        
+        
+        
         NSDictionary *responseDict = responseObject;
         NSNumber *statusCode = responseDict[@"status"];
         if ([statusCode intValue] == 200){
